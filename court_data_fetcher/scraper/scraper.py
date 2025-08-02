@@ -1,12 +1,13 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
 
 def fetch_case_data(case_type, case_number, year):
-    
+    print("▶ Starting Selenium scraper for Faridabad District Court...")
+
     if case_type.lower() == 'public' and case_number == '138' and year == '2006':
         print("💡 Returning dummy case data for testing...")
         return {
@@ -16,75 +17,54 @@ def fetch_case_data(case_type, case_number, year):
             "order_pdf": "https://wwfin.awsassets.panda.org/downloads/awaaz_foundation_vs_state_of_maharashtra.pdf"
         }, "<html><p>Dummy HTML content.</p></html>"
 
-    print("▶ Starting browser...")
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
+    options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=options)
-    wait = WebDriverWait(driver, 20)
 
     try:
-        print("▶ Opening Faridabad District Court page...")
-        driver.get('https://faridabad.dcourts.gov.in/case-status-search-by-case-number/')
+        driver.get("https://faridabad.dcourts.gov.in/case-status-search-by-case-number/")
+        print("▶ Page loaded.")
 
-        print("▶ Navigating to 'Case Status'...")
-        case_status = wait.until(EC.element_to_be_clickable((By.LINK_TEXT, "Case Status")))
-        case_status.click()
+        wait = WebDriverWait(driver, 20)
 
-        print("▶ Waiting for form to load...")
-        wait.until(EC.presence_of_element_located((By.ID, "case_type_code")))
+        court_dropdown = Select(wait.until(EC.presence_of_element_located((By.ID, "court_complex_code"))))
+        court_dropdown.select_by_visible_text("District Court, Faridabad")
+        print("▶ Court complex selected.")
 
-        print("▶ Filling in the form...")
-        try:
-            Select(driver.find_element(By.ID, "case_type_code")).select_by_visible_text(case_type)
-        except Exception:
-            raise ValueError(f"❌ Invalid case type: '{case_type}'")
+        Select(driver.find_element(By.ID, "case_type")).select_by_visible_text(case_type)
 
-        driver.find_element(By.ID, "case_no").send_keys(case_number)
+        driver.find_element(By.ID, "case_number").send_keys(case_number)
         driver.find_element(By.ID, "case_year").send_keys(year)
 
+        captcha_img = wait.until(EC.presence_of_element_located((By.XPATH, "//img[contains(@src, 'captcha')]")))
+        captcha_img.screenshot("captcha.png")
+        print("⚠ CAPTCHA saved as 'captcha.png'. Open it and enter the text manually:")
+
+        captcha_code = input("🔤 Enter CAPTCHA code: ")
+        driver.find_element(By.ID, "captcha_code").send_keys(captcha_code)
         
-        try:
-            print("📸  Detecting CAPTCHA...")
-            captcha_image = driver.find_element(By.ID, "captcha_image")
-            captcha_image.screenshot("captcha.png")
-            print("🔐 Please check 'captcha.png' and enter CAPTCHA:")
-            captcha_text = input("Enter CAPTCHA: ")
-            driver.find_element(By.ID, "captcha_input").send_keys(captcha_text)
-        except Exception:
-            print("⚠️ CAPTCHA not detected or ID incorrect.")
+        driver.find_element(By.ID, "searchbtn").click()
+        print("▶ Submitted. Waiting for results...")
 
-        print("▶ Submitting form...")
-        driver.find_element(By.ID, "submit_case").click()
+        time.sleep(5)
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        result_div = soup.find("div", class_="caseDetails")
 
-        print("▶ Waiting for results...")
-        wait.until(EC.presence_of_element_located((By.ID, "caseDetails")))
-
-        html = driver.page_source
-        soup = BeautifulSoup(html, "html.parser")
-
-        print("▶ Extracting details...")
-        parties = soup.find("div", id="caseDetails").find("strong").get_text(strip=True)
-        filing_date = soup.find("span", id="filingDate").get_text(strip=True) if soup.find("span", id="filingDate") else "N/A"
-        next_hearing = soup.find("span", id="nextHearingDate").get_text(strip=True) if soup.find("span", id="nextHearingDate") else "N/A"
-        order_pdf = soup.find("a", text="View Order")
-        order_link = order_pdf.get("href") if order_pdf else "N/A"
-
-        result = {
-            "parties": parties,
-            "filing_date": filing_date,
-            "next_hearing": next_hearing,
-            "order_pdf": order_link
-        }
-
-        print("✅ Scraping complete.")
-        return result, html
+        if result_div:
+            result_text = result_div.get_text(strip=True)
+            print("✅ Case found:")
+            print(result_text)
+            return result_text, str(soup)
+        else:
+            print("❌ No case data found. Possibly wrong CAPTCHA or invalid case details.")
+            return "No case data found.", str(soup)
 
     except Exception as e:
-        print(f"❌ Error: {e}")
-        return None, None
+        print("🚨 Error during scraping:", e)
+        return f"Error: {e}", ""
 
     finally:
-        print("▶ Closing browser.")
         driver.quit()
