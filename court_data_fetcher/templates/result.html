@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Case Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .container { max-width: 600px; margin: auto; }
+        .result, .error { padding: 20px; border-radius: 10px; }
+        .result { background: #e6f7ff; }
+        .error { background: #ffe6e6; color: red; }
+        h2 { text-align: center; }
+        p { margin-bottom: 10px; }
+        a { color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        {% if result %}
+            <div class="result">
+                <h2>Case Details</h2>
+                <p><strong>Parties:</strong> {{ result.parties }}</p>
+                <p><strong>Filing Date:</strong> {{ result.filing_date }}</p>
+                <p><strong>Next Hearing:</strong> {{ result.next_hearing }}</p>
+                <p><strong>Order PDF:</strong>
+                    {% if result.order_pdf != "N/A" %}
+                        <a href="{{ result.order_pdf }}" target="_blank">View Order</a>
+                    {% else %}
+                        Not available
+                    {% endif %}
+                </p>
+                <br>
+                <a href="/">🔄 Search another case</a>
+            </div>
+        {% elif error %}
+            <div class="error">
+                <h2>Error</h2>
+                <p>{{ error }}</p>
+                <br>
+                <a href="/">⬅ Go back</a>
+            </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>
