@@ -40,6 +40,11 @@ Setup MySQL database:
 5. Open in browser:
    -http://127.0.0.1:5000
 
+#Screenshots 
+<img width="1471" height="282" alt="image" src="https://github.com/user-attachments/assets/ceb71dec-1add-442e-81ce-6afb375da993" />
+<img width="1917" height="582" alt="image" src="https://github.com/user-attachments/assets/3698a42a-a470-44bc-9fb2-652e62d05e06" />
+<img width="1918" height="600" alt="image" src="https://github.com/user-attachments/assets/5ed3bbf5-3cf4-4e22-b685-40b9acab7411" />
+<img width="1918" height="522" alt="image" src="https://github.com/user-attachments/assets/307727d7-5fce-4004-9c2b-08761409adc7" />
 
 #Folder Structure
 
