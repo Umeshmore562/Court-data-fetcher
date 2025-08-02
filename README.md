@@ -19,6 +19,10 @@ This is a mini web application built using Flask, Python, HTML, and MySQL that a
 - MySQL
 - HTML/CSS
 
+#CAPTCHA Handling
+
+This project uses a manual CAPTCHA entry method to comply with legal and ethical scraping practices. When a CAPTCHA is detected, it is saved as an image (`captcha.png`). The user is prompted to open and enter the text manually. This keeps the project safe and usable for demos.
+
 # How to Run
 
 1. Clone the repo:
